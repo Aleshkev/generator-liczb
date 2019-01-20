@@ -17,6 +17,9 @@ import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import { ToggleButton } from "@material-ui/lab";
 import * as Color from "color";
 
+import weights from "./weights.js";
+import generateNumber from "./numberGenerator.js";
+
 const styles = theme => ({
   main: {
     margin: theme.spacing.unit * 2
@@ -84,24 +87,15 @@ class App extends Component {
   };
 
   newNumber = () => {
-    const available = this.state.whitelist.slice();
-    if (available.length === 0) return;
+    const x = generateNumber(
+      this.state.whitelist.slice(),
+      this.state.chosenNumbers.slice(),
+      weights,
+      this.state.avoidRepetition
+    );
 
-    const lastNumbers = this.state.chosenNumbers.slice();
-    const last = lastNumbers[lastNumbers.length - 1];
-    if (available.indexOf(last) !== -1) {
-      available.splice(available.indexOf(last), 1);
-    }
-
-    for (let i = 0; i < 100; ++i) {
-      let j = Math.floor(Math.random() * available.length);
-      console.log(j, available[j], available);
-    }
-
-    const x = available[Math.floor(Math.random() * available.length)];
-
-    lastNumbers.push(x);
-    this.setState({ chosenNumbers: lastNumbers });
+    this.state.chosenNumbers.push(x);
+    this.setState({ chosenNumbers: this.state.chosenNumbers });
   };
 
   render() {
