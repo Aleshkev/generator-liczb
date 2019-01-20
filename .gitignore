@@ -4,8 +4,8 @@
 .pnp.js
 
 # files
-*.map.css
-*.map.js
+*.css.map
+*.js.map
 
 # testing
 /coverage
