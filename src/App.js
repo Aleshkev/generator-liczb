@@ -84,7 +84,7 @@ class App extends Component {
     this.n = 40;
 
     this.state = {
-      whitelist: range(1, 2),
+      whitelist: range(1, 30),
       avoidRepetition: false,
       chosenNumbers: [-1]
     };

@@ -1,11 +1,11 @@
 self.__precacheManifest = [
   {
-    "revision": "e8355a4810b7d5da1ce0",
+    "revision": "97b33d86a566a74a91a4",
     "url": "/generator-liczb/static/css/main.706054d9.chunk.css"
   },
   {
-    "revision": "e8355a4810b7d5da1ce0",
-    "url": "/generator-liczb/static/js/main.e8355a48.chunk.js"
+    "revision": "97b33d86a566a74a91a4",
+    "url": "/generator-liczb/static/js/main.97b33d86.chunk.js"
   },
   {
     "revision": "560eee95aadab6245c09",
@@ -16,7 +16,7 @@ self.__precacheManifest = [
     "url": "/generator-liczb/static/js/runtime~main.b38909c5.js"
   },
   {
-    "revision": "2ba6c3172af49b843d3a7eade8904f0c",
+    "revision": "52296e45aca9e4d009192c97c38da0b1",
     "url": "/generator-liczb/index.html"
   }
 ];
