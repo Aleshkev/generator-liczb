@@ -25,10 +25,9 @@ import { withStyles } from "@material-ui/core/styles";
 import { range, remove } from "lodash";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import { ToggleButton } from "@material-ui/lab";
-import * as Color from "color";
+import Color from "color";
 
-import weights from "./weights.js";
-import generateNumber from "./numberGenerator.js";
+import { generateNumber } from "./numberGenerator.js";
 
 const styles = theme => ({
   main: {
@@ -81,10 +80,8 @@ class App extends Component {
   constructor() {
     super();
 
-    this.n = 40;
-
     this.state = {
-      whitelist: range(1, 30),
+      whitelist: range(1, 8),
       avoidRepetition: false,
       chosenNumbers: [-1]
     };
@@ -92,7 +89,7 @@ class App extends Component {
 
   onWhitelistChange = i => {
     const whitelist = this.state.whitelist.slice();
-    if (whitelist.indexOf(i) == -1) whitelist.push(i);
+    if (whitelist.indexOf(i) === -1) whitelist.push(i);
     else whitelist.splice(whitelist.indexOf(i), 1);
     this.setState({ whitelist: whitelist });
   };
@@ -101,7 +98,6 @@ class App extends Component {
     const x = generateNumber(
       this.state.whitelist.slice(),
       this.state.chosenNumbers.slice(),
-      weights,
       this.state.avoidRepetition
     );
 
@@ -128,7 +124,7 @@ class App extends Component {
                   justify="center"
                   style={{ maxHeight: 32 * 10 }}
                 >
-                  {range(1, this.n + 1).map(i => (
+                  {range(1, 41).map(i => (
                     <Grid item key={i}>
                       <ToggleButton
                         value={i}
