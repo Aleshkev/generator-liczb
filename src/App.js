@@ -13,7 +13,6 @@ import withStyles from "@material-ui/core/styles/withStyles";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import ToggleButton from "@material-ui/lab/ToggleButton";
 import { range } from "lodash";
-import Color from "color";
 
 import { generateNumber } from "./numberGenerator.js";
 
@@ -34,9 +33,7 @@ const styles = theme => ({
   },
   numbersItemSelected: {
     color: `${theme.palette.primary.main} !important`,
-    backgroundColor: `${Color(theme.palette.primary.light).alpha(
-      0.2
-    )} !important`
+    backgroundColor: `rgba(121, 134, 203, 0.2) !important` // I believe it's actually primary.light, but with alpha.
   },
 
   bigNumberDisplay: {
