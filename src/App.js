@@ -66,7 +66,7 @@ class App extends Component {
     super();
 
     this.state = {
-      whitelist: range(1, 8),
+      whitelist: range(1, 30),
       avoidRepetition: false,
       chosenNumbers: [-1]
     };
