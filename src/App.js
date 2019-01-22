@@ -11,6 +11,16 @@ import {
   ExpansionPanelSummary,
   Typography
 } from "@material-ui/core";
+// import { CssBaseline } from "@material-ui/core/CssBaseline";
+// import { Button } from "@material-ui/core/Button";
+// import { Switch } from "@material-ui/core/Switch";
+// import { FormControlLabel } from "@material-ui/core/FormControlLabel";
+// import { Grid } from "@material-ui/core/Grid";
+// import { Paper } from "@material-ui/core/Paper";
+// import { ExpansionPanel } from "@material-ui/core/ExpansionPanel";
+// import { ExpansionPanelDetails } from "@material-ui/core/ExpansionPanelDetails";
+// import { ExpansionPanelSummary } from "@material-ui/core/ExpansionPanelSummary";
+// import { Typography } from "@material-ui/core/Typography";
 import { withStyles } from "@material-ui/core/styles";
 import { range, remove } from "lodash";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
@@ -28,7 +38,8 @@ const styles = theme => ({
   numbersContainer: {
     [theme.breakpoints.up("sm")]: {
       maxWidth: 4 * 48 + 2 * 24 + 2 * 12 // 4 * 48 (from 4 buttons in row) + 2 * 24 (ExpansionPanel padding) + 24 (Grid spacing)
-    }
+    },
+    paddingBottom: 0
   },
   numbersItem: {
     width: "100%",
