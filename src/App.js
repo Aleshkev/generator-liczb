@@ -12,7 +12,7 @@ import Typography from "@material-ui/core/Typography";
 import withStyles from "@material-ui/core/styles/withStyles";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import ToggleButton from "@material-ui/lab/ToggleButton";
-import { range } from "lodash";
+import range from "lodash/range";
 
 import { generateNumber } from "./numberGenerator.js";
 

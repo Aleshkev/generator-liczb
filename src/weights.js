@@ -1,4 +1,4 @@
-import { max } from "lodash";
+import max from "lodash/max";
 
 const weights = {
   1: 20,
