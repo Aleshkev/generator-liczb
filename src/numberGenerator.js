@@ -1,8 +1,13 @@
-import random from "lodash";
+import { random, remove } from "lodash";
 
 function generateNumber(whitelist, last, weights, avoidRepetition) {
-  if (whitelist.length <= 2) {
-    // Note: weights are ignored when there are only two elements (too easy to notice).
+  if (whitelist.length > 2) {
+    remove(whitelist, x => x == last[last.length - 1]);
+  }
+
+  if (whitelist.length <= 4) {
+    // Note: weights are ignored when there are only few elements (too easy to notice).
+
     return whitelist[random(0, whitelist.length - 1)];
   }
 
@@ -13,7 +18,7 @@ function generateNumber(whitelist, last, weights, avoidRepetition) {
     }
   }
 
-  const x = weighted[Math.floor(Math.random() * weighted.length)];
+  const x = weighted[random(0, weighted.length - 1)];
 
   return x;
 }
