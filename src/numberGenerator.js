@@ -1,7 +1,7 @@
 import random from "lodash/random";
-import remove from "lodash/random";
-import max from "lodash/random";
-import range from "lodash/random";
+import remove from "lodash/remove";
+import max from "lodash/max";
+import range from "lodash/range";
 import { weights, applyWeightsRule } from "./weights.js";
 
 function getWeighted(whitelist) {
