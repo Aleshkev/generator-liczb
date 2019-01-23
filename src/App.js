@@ -13,6 +13,9 @@ import withStyles from "@material-ui/core/styles/withStyles";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import ToggleButton from "@material-ui/lab/ToggleButton";
 import range from "lodash/range";
+import min from "lodash/min";
+import remove from "lodash/remove";
+import sumBy from "lodash/sumBy";
 
 import { generateNumber } from "./numberGenerator.js";
 
@@ -65,23 +68,37 @@ class App extends Component {
   constructor() {
     super();
 
+    let whitelist = [];
+    whitelist.length = 40;
+    for (let i = 0; i < 40; ++i) whitelist[i] = i < 29;
+
     this.state = {
-      whitelist: range(1, 30),
+      whitelist: whitelist,
       avoidRepetition: false,
-      chosenNumbers: [-1]
+      chosenNumbers: []
     };
   }
 
-  onWhitelistChange = i => {
+  onWhitelistChange = (i, shift) => {
     const whitelist = this.state.whitelist.slice();
-    if (whitelist.indexOf(i) === -1) whitelist.push(i);
-    else whitelist.splice(whitelist.indexOf(i), 1);
+
+    if (shift) {
+      for (let j = i - 1; j >= 0 && whitelist[i] == whitelist[j]; --j)
+        whitelist[j] = !whitelist[j];
+    }
+    whitelist[i] = !whitelist[i];
+
     this.setState({ whitelist: whitelist });
   };
 
   newNumber = () => {
+    const collapsedWhitelist = [];
+    for (let i = 0; i < 40; ++i) {
+      if (this.state.whitelist[i]) collapsedWhitelist.push(i + 1);
+    }
+
     const x = generateNumber(
-      this.state.whitelist.slice(),
+      collapsedWhitelist,
       this.state.chosenNumbers.slice(),
       this.state.avoidRepetition
     );
@@ -109,18 +126,21 @@ class App extends Component {
                   justify="center"
                   style={{ maxHeight: 32 * 10 }}
                 >
-                  {range(1, 41).map(i => (
+                  {range(40).map(i => (
                     <Grid item key={i}>
                       <ToggleButton
                         value={i}
-                        selected={this.state.whitelist.indexOf(i) !== -1}
-                        onChange={event => this.onWhitelistChange(i)}
+                        selected={this.state.whitelist[i]}
+                        onChange={event => {
+                          event.stopPropagation();
+                          this.onWhitelistChange(i, event.shiftKey);
+                        }}
                         classes={{
                           root: classes.numbersItem,
                           selected: classes.numbersItemSelected
                         }}
                       >
-                        {i}
+                        {i + 1}
                       </ToggleButton>
                     </Grid>
                   ))}
@@ -150,7 +170,7 @@ class App extends Component {
             </ExpansionPanel>
 
             <Button
-              disabled={this.state.whitelist.length < 2}
+              disabled={sumBy(this.state.whitelist) < 2}
               onClick={this.newNumber}
               variant="contained"
               color="primary"
@@ -163,7 +183,7 @@ class App extends Component {
           <Grid item xs={12} sm={6}>
             <Paper>
               <Typography className={classes.bigNumberDisplay}>
-                {this.state.chosenNumbers.length > 1
+                {this.state.chosenNumbers.length > 0
                   ? this.state.chosenNumbers[
                       this.state.chosenNumbers.length - 1
                     ]
