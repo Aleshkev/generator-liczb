@@ -1,22 +1,19 @@
-import React, { Component } from "react";
-import CssBaseline from "@material-ui/core/CssBaseline";
 import Button from "@material-ui/core/Button";
-import Switch from "@material-ui/core/Switch";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import Grid from "@material-ui/core/Grid";
-import Paper from "@material-ui/core/Paper";
+import CssBaseline from "@material-ui/core/CssBaseline";
 import ExpansionPanel from "@material-ui/core/ExpansionPanel";
 import ExpansionPanelDetails from "@material-ui/core/ExpansionPanelDetails";
 import ExpansionPanelSummary from "@material-ui/core/ExpansionPanelSummary";
-import Typography from "@material-ui/core/Typography";
+import FormControlLabel from "@material-ui/core/FormControlLabel";
+import Grid from "@material-ui/core/Grid";
+import Paper from "@material-ui/core/Paper";
 import withStyles from "@material-ui/core/styles/withStyles";
+import Switch from "@material-ui/core/Switch";
+import Typography from "@material-ui/core/Typography";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import ToggleButton from "@material-ui/lab/ToggleButton";
 import range from "lodash/range";
-import min from "lodash/min";
-import remove from "lodash/remove";
 import sumBy from "lodash/sumBy";
-
+import React, { Component } from "react";
 import { generateNumber } from "./numberGenerator.js";
 
 const styles = theme => ({
@@ -69,7 +66,6 @@ class App extends Component {
     super();
 
     let whitelist = [];
-    whitelist.length = 40;
     for (let i = 0; i < 40; ++i) whitelist[i] = i < 29;
 
     this.state = {
@@ -83,7 +79,7 @@ class App extends Component {
     const whitelist = this.state.whitelist.slice();
 
     if (shift) {
-      for (let j = i - 1; j >= 0 && whitelist[i] == whitelist[j]; --j)
+      for (let j = i - 1; j >= 0 && whitelist[i] === whitelist[j]; --j)
         whitelist[j] = !whitelist[j];
     }
     whitelist[i] = !whitelist[i];
