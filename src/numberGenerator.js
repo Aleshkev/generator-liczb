@@ -35,7 +35,7 @@ let last = [];
 let k = 0;
 function nextSequentialRandom(whitelist) {
   const important = last.slice(last.length - k);
-  const needs_reset = whitelist.every(x => important.indexOf(x) != -1);
+  const needs_reset = whitelist.every(x => important.indexOf(x) !== -1);
   if (needs_reset) k = 0;
 
   for (let i = last.length - k; i < last.length; ++i) {
