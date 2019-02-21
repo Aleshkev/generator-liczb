@@ -8,13 +8,13 @@ import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
 import withStyles from "@material-ui/core/styles/withStyles";
 import Switch from "@material-ui/core/Switch";
-import Typography from "@material-ui/core/Typography";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import ToggleButton from "@material-ui/lab/ToggleButton";
 import range from "lodash/range";
 import sumBy from "lodash/sumBy";
 import React, { Component } from "react";
 import { generateNumber } from "./numberGenerator.js";
+import BigNumberDisplay from "./BigNumberDisplay.js";
 
 const styles = theme => ({
   main: {
@@ -34,20 +34,6 @@ const styles = theme => ({
   numbersItemSelected: {
     color: `${theme.palette.primary.main} !important`,
     backgroundColor: `rgba(121, 134, 203, 0.2) !important` // I believe it's actually primary.light, but with alpha.
-  },
-
-  bigNumberDisplay: {
-    width: "100%",
-    textAlign: "center",
-    fontWeight: "bold",
-
-    fontSize: "50vw",
-    [theme.breakpoints.up("sm")]: {
-      fontSize: "25vw",
-      [theme.breakpoints.up("xl")]: {
-        fontSize: 500
-      }
-    }
   },
 
   newNumberButton: {
@@ -176,11 +162,7 @@ class App extends Component {
 
           <Grid item xs={12} sm={6}>
             <Paper>
-              <Typography className={classes.bigNumberDisplay}>
-                {this.state.chosenNumber !== null
-                  ? this.state.chosenNumber
-                  : ""}
-              </Typography>
+              <BigNumberDisplay chosenNumber={this.state.chosenNumber} />
             </Paper>
           </Grid>
         </Grid>
