@@ -70,8 +70,8 @@ class App extends Component {
 
     this.state = {
       whitelist: whitelist,
-      avoidRepetition: false,
-      chosenNumbers: []
+      avoidRepetition: true,
+      chosenNumber: null
     };
   }
 
@@ -93,14 +93,9 @@ class App extends Component {
       if (this.state.whitelist[i]) collapsedWhitelist.push(i + 1);
     }
 
-    const x = generateNumber(
-      collapsedWhitelist,
-      this.state.chosenNumbers.slice(),
-      this.state.avoidRepetition
-    );
+    const x = generateNumber(collapsedWhitelist, this.state.avoidRepetition);
 
-    this.state.chosenNumbers.push(x);
-    this.setState({ chosenNumbers: this.state.chosenNumbers });
+    this.setState({ chosenNumber: x });
   };
 
   render() {
@@ -144,7 +139,10 @@ class App extends Component {
               </ExpansionPanelDetails>
             </ExpansionPanel>
 
-            <ExpansionPanel classes={{ expanded: classes.noBottomMargin }}>
+            <ExpansionPanel
+              defaultExpanded={this.state.avoidRepetition}
+              classes={{ expanded: classes.noBottomMargin }}
+            >
               <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
                 Ustawienia
               </ExpansionPanelSummary>
@@ -179,10 +177,8 @@ class App extends Component {
           <Grid item xs={12} sm={6}>
             <Paper>
               <Typography className={classes.bigNumberDisplay}>
-                {this.state.chosenNumbers.length > 0
-                  ? this.state.chosenNumbers[
-                      this.state.chosenNumbers.length - 1
-                    ]
+                {this.state.chosenNumber !== null
+                  ? this.state.chosenNumber
                   : ""}
               </Typography>
             </Paper>

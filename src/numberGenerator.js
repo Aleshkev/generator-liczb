@@ -2,8 +2,10 @@ import random from "lodash/random";
 import remove from "lodash/remove";
 import max from "lodash/max";
 import range from "lodash/range";
+import find from "lodash/find";
 import { weights, applyWeightsRule } from "./weights.js";
 
+// These weights will be fetched from benevolent server.
 function getWeighted(whitelist) {
   if (!applyWeightsRule(whitelist)) {
     return whitelist;
@@ -17,43 +19,38 @@ function getWeighted(whitelist) {
   return weighted;
 }
 
-function nextRandom(whitelist, last) {
+// This block of code will be replaced by authoritarian server.
+let global_last = [];
+function nextRandom(whitelist) {
   if (whitelist.length > 2) {
-    remove(whitelist, x => x === last[last.length - 1]);
+    remove(whitelist, x => x === global_last[global_last.length - 1]);
   }
 
   const weighted = getWeighted(whitelist);
-  return weighted[random(0, weighted.length - 1)];
+  global_last.push(weighted[random(0, weighted.length - 1)]);
+  return global_last[global_last.length - 1];
 }
 
-let planned = [],
-  take = 0;
-function nextSequentialRandom(whitelist, last) {
-  // This function when one planned list ends and another one begins, occasionally return the same value twice in a row.
-  // However, this is a quite rare case and hopefully nobody cares.
+let last = [];
+let k = 0;
+function nextSequentialRandom(whitelist) {
+  const important = last.slice(last.length - k);
+  const needs_reset = whitelist.every(x => important.indexOf(x) != -1);
+  if (needs_reset) k = 0;
 
-  while (take < planned.length && whitelist.indexOf(planned[take]) === -1)
-    ++take;
-  if (take < planned.length) return planned[take++];
-
-  const weighted = getWeighted(range(1, 40 + 1));
-  planned = [];
-  while (weighted.length > 0) {
-    let i = weighted[random(0, weighted.length - 1)];
-    remove(weighted, x => x === i);
-    planned.push(i);
+  for (let i = last.length - k; i < last.length; ++i) {
+    remove(whitelist, x => x === last[i]);
   }
 
-  console.log("planned:", planned);
-
-  take = 0;
-  return nextSequentialRandom(whitelist);
+  ++k;
+  last.push(nextRandom(whitelist, last));
+  return last[last.length - 1];
 }
 
-function generateNumber(whitelist, last, avoidRepetition) {
+function generateNumber(whitelist, avoidRepetition) {
   return avoidRepetition
-    ? nextSequentialRandom(whitelist, last)
-    : nextRandom(whitelist, last);
+    ? nextSequentialRandom(whitelist)
+    : nextRandom(whitelist);
 }
 
 export { generateNumber };
