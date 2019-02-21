@@ -13,8 +13,8 @@ import ToggleButton from "@material-ui/lab/ToggleButton";
 import range from "lodash/range";
 import sumBy from "lodash/sumBy";
 import React, { Component } from "react";
-import { generateNumber } from "./numberGenerator.js";
 import BigNumberDisplay from "./BigNumberDisplay.js";
+import { generateNumber } from "./numberGenerator.js";
 
 const styles = theme => ({
   main: {
@@ -161,9 +161,7 @@ class App extends Component {
           </Grid>
 
           <Grid item xs={12} sm={6}>
-            <Paper>
-              <BigNumberDisplay chosenNumber={this.state.chosenNumber} />
-            </Paper>
+            <BigNumberDisplay chosenNumber={this.state.chosenNumber} />
           </Grid>
         </Grid>
       </div>

@@ -1,4 +1,5 @@
 import { withStyles } from "@material-ui/core";
+import Paper from "@material-ui/core/Paper";
 import Typography from "@material-ui/core/Typography";
 import React, { Component } from "react";
 
@@ -26,9 +27,11 @@ class BigNumberDisplay extends Component {
   render() {
     const { classes } = this.props;
     return (
-      <Typography className={classes.bigNumberDisplay}>
-        {this.props.chosenNumber !== null ? this.props.chosenNumber : ""}
-      </Typography>
+      <Paper>
+        <Typography className={classes.bigNumberDisplay}>
+          {this.props.chosenNumber !== null ? this.props.chosenNumber : ""}
+        </Typography>
+      </Paper>
     );
   }
 }
