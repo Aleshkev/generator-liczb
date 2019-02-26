@@ -67,6 +67,7 @@ template = string.Template("""
       }
       li {
         width: 32px;
+        text-align: right;
       }
     </style>
   </head>
