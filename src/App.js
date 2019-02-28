@@ -13,7 +13,7 @@ import range from "lodash/range";
 import sumBy from "lodash/sumBy";
 import React, { Component } from "react";
 import BigNumberDisplay from "./BigNumberDisplay.js";
-import { generateNumber } from "./numberGenerator.js";
+import sequence from "./Sequence.js";
 
 const styles = theme => ({
   main: {
@@ -63,23 +63,19 @@ class App extends Component {
   onWhitelistChange = (i, shift) => {
     const whitelist = this.state.whitelist.slice();
 
-    if (shift) {
+    if (shift)
       for (let j = i - 1; j >= 0 && whitelist[i] === whitelist[j]; --j)
         whitelist[j] = !whitelist[j];
-    }
+
     whitelist[i] = !whitelist[i];
 
     this.setState({ whitelist: whitelist });
   };
 
   newNumber = () => {
-    const collapsedWhitelist = [];
-    for (let i = 0; i < 40; ++i) {
-      if (this.state.whitelist[i]) collapsedWhitelist.push(i + 1);
-    }
-
-    const x = generateNumber(collapsedWhitelist, this.state.avoidRepetition);
-
+    const x = this.state.avoidRepetition
+      ? sequence.getWithoutRepetition(this.state.whitelist)
+      : sequence.getRegular(this.state.whitelist);
     this.setState({ chosenNumber: x });
   };
 

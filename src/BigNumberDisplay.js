@@ -40,7 +40,7 @@ class BigNumberDisplay extends Component {
     return this.props.chosenNumber !== null ? (
       <Paper className={classes.bigNumberPaper}>
         <Typography className={classes.bigNumberDisplay}>
-          {this.props.chosenNumber}
+          {this.props.chosenNumber + 1}
         </Typography>
       </Paper>
     ) : null;
