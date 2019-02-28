@@ -31,12 +31,11 @@ class Sequence {
     return x;
   }
 
-  // Get a number, strictly following the whitelist, repetitions possible.
+  // Get a number, strictly following the whitelist.
+  // No state saved between calls.
   get(whitelist) {
     if (sumBy(whitelist) === 0 || whitelist.length != 40)
       throw new Error("Invalid whitelist");
-
-    console.log(whitelist, this.next);
 
     for (;;) {
       const x = this._get();
@@ -44,23 +43,26 @@ class Sequence {
     }
   }
 
-  // Get a number, following the whitelist, no two numbers in a row will be the same (unless whitelist.length < 3).
+  // Get a number, following the whitelist.
+  // No two numbers in a row will be the same (except in corner cases).
   getRegular(whitelist) {
     whitelist = whitelist.slice();
 
-    // If there are less than 3 elements, we can't remove anything from whitelist without fixing the result.
+    // If there are less than 3 elements, we can't skip anything without fixing the result.
     if (sumBy(whitelist) < 3) return this.get(whitelist);
 
     const last = this.lastRegular;
 
-    // Remove last number from whitelist.
+    // Don't choose last number.
     whitelist[last[last.length - 1]] = false;
 
     last.push(this.get(whitelist));
     return last[last.length - 1];
   }
 
-  // Get a number, following the whitelist, cycles through all numbers before any repeat. Falls back to getRegular() in corner cases.
+  // Get a number, following the whitelist.
+  // Cycles through all numbers before any repeat.
+  // Falls back to getRegular() in corner cases.
   getWithoutRepetition(whitelist) {
     whitelist = whitelist.slice();
 
