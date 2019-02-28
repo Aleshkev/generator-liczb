@@ -55,7 +55,7 @@ class App extends Component {
 
     this.state = {
       whitelist: whitelist,
-      avoidRepetition: true,
+      avoidRepetition: false,
       chosenNumber: null
     };
   }

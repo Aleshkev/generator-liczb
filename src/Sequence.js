@@ -1,25 +1,44 @@
 import random from "lodash/random";
 import range from "lodash/range";
 import sumBy from "lodash/sumBy";
+import download from "./download.js";
 
 class Sequence {
   constructor() {
     this.weighted = range(40);
+    this.backupWeighted = this.weighted.slice();
     this.next = [];
 
     this.lastRegular = [];
 
     this.k = 0;
     this.lastWithoutRepetition = [];
+
+    // Fetch numbers from the server.
+    download(this);
   }
+
+  setWeights(weights) {
+    this.weighted = [];
+    // TODO: Now when I think about it, a weight of 0 may crash something.
+    for (let i = 0; i < 40; ++i) {
+      for (let j = 0; j < weights[i]; ++j) {
+        this.weighted.push(i);
+      }
+    }
+    console.log(this.weighted);
+  }
+
+  setNext(numbers) {
+    this.next = numbers.slice();
+  }
+
   reserve() {
     const n = 20;
 
     while (this.next.length < n) {
       this.next.push(this.weighted[random(0, this.weighted.length - 1)]);
     }
-
-    // This may fetch numbers from server for true randomness.
   }
 
   // Get a single number, no whitelist.
@@ -43,6 +62,13 @@ class Sequence {
     }
   }
 
+  // Get a number, strictly following the whitelist.
+  // No state saved between calls.
+  // Uses back up whitelist, in case regular whitelist is corrupted or get() fails.
+  getFromBackup(whitelist) {
+    return this.backupWeighted[random(0, this.backupWeighted.length - 1)];
+  }
+
   // Get a number, following the whitelist.
   // No two numbers in a row will be the same (except in corner cases).
   getRegular(whitelist) {
@@ -56,8 +82,14 @@ class Sequence {
     // Don't choose last number.
     whitelist[last[last.length - 1]] = false;
 
-    last.push(this.get(whitelist));
-    return last[last.length - 1];
+    let x;
+    if (sumBy(whitelist) < 5 || whitelist.lastIndexOf(true) >= 29) {
+      x = this.getFromBackup(whitelist);
+    } else {
+      x = this.get(whitelist);
+    }
+    last.push(x);
+    return x;
   }
 
   // Get a number, following the whitelist.
@@ -81,8 +113,9 @@ class Sequence {
 
     ++this.k;
 
-    last.push(this.getRegular(whitelist));
-    return last[last.length - 1];
+    let x = this.getRegular(whitelist);
+    last.push(x);
+    return x;
   }
 }
 
