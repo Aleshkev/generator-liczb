@@ -7,6 +7,7 @@ import itertools
 import string
 import traceback
 import html
+import pytz
 
 from flask import Flask, request, abort, make_response
 
@@ -59,9 +60,8 @@ def get():
 
     if auth == "12345":  # TODO: Better password.
         assigned_block[client] = block
-        access_time[client] = datetime.datetime.now()
+        access_time[client] = datetime.datetime.now(pytz.timezone('Europe/Warsaw'))
 
     response = make_response(compressed_weights + ' ' + compress_numbers(block))
     response.headers['Access-Control-Allow-Origin'] = '*'
     return response
-

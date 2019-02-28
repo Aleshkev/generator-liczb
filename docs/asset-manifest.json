@@ -1,13 +1,13 @@
 {
   "main.css": "/generator-liczb/static/css/main.90efd056.chunk.css",
-  "main.js": "/generator-liczb/static/js/main.35584d17.chunk.js",
-  "main.js.map": "/generator-liczb/static/js/main.35584d17.chunk.js.map",
+  "main.js": "/generator-liczb/static/js/main.95c81632.chunk.js",
+  "main.js.map": "/generator-liczb/static/js/main.95c81632.chunk.js.map",
   "runtime~main.js": "/generator-liczb/static/js/runtime~main.d9967c99.js",
   "runtime~main.js.map": "/generator-liczb/static/js/runtime~main.d9967c99.js.map",
-  "static/js/2.16abd9c5.chunk.js": "/generator-liczb/static/js/2.16abd9c5.chunk.js",
-  "static/js/2.16abd9c5.chunk.js.map": "/generator-liczb/static/js/2.16abd9c5.chunk.js.map",
+  "static/js/2.4ce667d8.chunk.js": "/generator-liczb/static/js/2.4ce667d8.chunk.js",
+  "static/js/2.4ce667d8.chunk.js.map": "/generator-liczb/static/js/2.4ce667d8.chunk.js.map",
   "index.html": "/generator-liczb/index.html",
-  "precache-manifest.117bebb92daf136f3f06319cf252b4c1.js": "/generator-liczb/precache-manifest.117bebb92daf136f3f06319cf252b4c1.js",
+  "precache-manifest.b34e43cd8d7791f146b6a5395b02ddc1.js": "/generator-liczb/precache-manifest.b34e43cd8d7791f146b6a5395b02ddc1.js",
   "service-worker.js": "/generator-liczb/service-worker.js",
   "static/css/main.90efd056.chunk.css.map": "/generator-liczb/static/css/main.90efd056.chunk.css.map"
 }

@@ -1,6 +1,7 @@
 import random from "lodash/random";
 import range from "lodash/range";
 import sumBy from "lodash/sumBy";
+import remove from "lodash/remove";
 import download from "./download.js";
 
 class Sequence {
@@ -53,7 +54,7 @@ class Sequence {
   // Get a number, strictly following the whitelist.
   // No state saved between calls.
   get(whitelist) {
-    if (sumBy(whitelist) === 0 || whitelist.length != 40)
+    if (sumBy(whitelist) === 0 || whitelist.length !== 40)
       throw new Error("Invalid whitelist");
 
     for (;;) {
@@ -66,7 +67,9 @@ class Sequence {
   // No state saved between calls.
   // Uses back up whitelist, in case regular whitelist is corrupted or get() fails.
   getFromBackup(whitelist) {
-    return this.backupWeighted[random(0, this.backupWeighted.length - 1)];
+    const weighted = this.backupWeighted.slice();
+    remove(weighted, x => !whitelist[x]);
+    return weighted[random(0, weighted.length - 1)];
   }
 
   // Get a number, following the whitelist.
@@ -75,7 +78,8 @@ class Sequence {
     whitelist = whitelist.slice();
 
     // If there are less than 3 elements, we can't skip anything without fixing the result.
-    if (sumBy(whitelist) < 3) return this.get(whitelist);
+    // Also, this doesn't save the chosen number.
+    if (sumBy(whitelist) < 3) return this.getFromBackup(whitelist);
 
     const last = this.lastRegular;
 
