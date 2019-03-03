@@ -58,6 +58,33 @@ class App extends Component {
       avoidRepetition: false,
       chosenNumber: null
     };
+
+    for (let [hours, minutes] of [
+      [8, 15],
+      [9, 10],
+      [10, 10],
+      [11, 5],
+      [12, 0],
+      [13, 5],
+      [14, 10],
+      [15, 5]
+    ]) {
+      let now = new Date();
+      let delta =
+        new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate(),
+          hours,
+          minutes
+        ) - now;
+      console.log(delta);
+      if (delta > 0) {
+        setTimeout(() => {
+          window.location.reload();
+        }, delta);
+      }
+    }
   }
 
   onWhitelistChange = (i, shift) => {
