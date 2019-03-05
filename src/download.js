@@ -11,23 +11,32 @@ function decompress_numbers(numbers) {
   return x;
 }
 
+function compressWhitelist(whitelist) {
+  let x = 0;
+  for (let i = 0; i < 40; ++i) {
+    if (whitelist[i]) x |= 1 << i;
+  }
+  return x;
+}
+
 // Because in-browser random number generator isn't perfect, we outsource the job of generating random numbers overseas.
-function download(sequence) {
+function download(sequence, whitelist) {
   get("https://generatorliczb.pythonanywhere.com/get", {
     params: {
-      auth: "12345",
-      client: navigator.userAgent
+      whitelist: compressWhitelist(whitelist),
+      auth: "12345"
     }
   })
     .then(response => {
       console.log(response);
 
       const [x, y] = response.data.split(" ");
-      const weights = decompress_numbers(x);
-      const next = decompress_numbers(y);
+      const next = +x;
+      const weights = decompress_numbers(y);
 
+      sequence.next[0] = next;
+      console.log(sequence.next);
       sequence.setWeights(weights);
-      sequence.setNext(next);
     })
     .catch(error => {
       console.error(error);

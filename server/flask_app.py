@@ -1,19 +1,20 @@
-import collections
-import itertools
-import random
-import string
-from typing import *
-import yaml
-import pathlib
+import calendar
 import dataclasses
 import datetime
-import re
-import warnings
-import logging
 import html
-import pytz
+import itertools
+import logging
+import pathlib
+import random
+import re
+import string
+import traceback
+import warnings
+from typing import *
 
-from flask import Flask, request, abort, make_response
+import pytz
+import yaml
+from flask import Flask, request, make_response
 
 app = Flask(__name__)
 
@@ -27,8 +28,8 @@ def lesson_end(start: datetime.time) -> datetime.time:
     return (datetime.datetime.combine(datetime.date.today(), start) + datetime.timedelta(minutes=45)).time()
 
 
-def process_transactions(transactions: str, n_students: int) -> List[int]:
-    weights = [10] * n_students
+def process_transactions(transactions: str) -> Tuple[int, ...]:
+    weights = [10] * 40
     for transaction in transactions:
         match = re.match(r'(.*), (.+)', transaction)
 
@@ -51,7 +52,7 @@ def process_transactions(transactions: str, n_students: int) -> List[int]:
             weights[b] += n
             assert 0 < weights[a] < 64 and 0 < weights[b] < 64
 
-    return weights
+    return tuple(weights)
 
 
 def generate_numbers(weights: List[int], n: int = 500) -> List[int]:
@@ -59,49 +60,58 @@ def generate_numbers(weights: List[int], n: int = 500) -> List[int]:
     return list(random.choice(weighted) for _ in range(n))
 
 
-def compress_numbers(numbers: List[int],
+def compress_numbers(numbers: Iterable[int],
                      alphabet: str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzm0123456789+/"):
     assert all(0 <= x < len(alphabet) for x in numbers)
     return ''.join(alphabet[i] for i in numbers)
 
 
-ClassId = NewType('ClassId', str)
-UserId = NewType('UserId', str)
-Client = NewType('Client', str)
-
-
-class Class(NamedTuple):
-    id: ClassId
-    name: str
-    weights: List[int]
-
-
 class Lesson(NamedTuple):
-    teached_class: Class
-    start_time: datetime.time
-    end_time: datetime.time
+    start: datetime.time
+    end: datetime.time
 
-
-class User(NamedTuple):
-    id: UserId
-    name: str
-    client: Client
-    plan: List[List[Optional[Lesson]]]
+    def __repr__(self):
+        return f"{self.start.hour}:{self.start.minute:0>2}-{self.end.hour}:{self.end.minute:0>2}"
 
 
 @dataclasses.dataclass
-class Block:
-    numbers: List[int]
-    lesson: Lesson
-    sent: bool = False
+class User:
+    client: str
+    name: str
+    weights: Tuple[int, ...]
+    plan: Tuple[Tuple[Optional[Lesson], ...], ...]
 
-    def __repr__(self):
-        return f"Block(numbers=..., lesson={self.lesson}, sent={self.sent}"
+    numbers: Tuple[int, ...] = ()
+    i: int = 0
+
+    def is_active(self, moment: datetime.datetime):
+        return any(lesson.start <= moment.time() <= lesson.end for lesson in self.plan[moment.weekday()])
+
+    def reserve(self, n: int = 500):
+        weighted = tuple(itertools.chain(*((i,) * self.weights[i] for i in range(40))))
+        while len(self.numbers) < n:
+            x = random.choice(weighted)
+            while self.numbers and self.numbers[-1] == x:
+                x = random.choice(weighted)
+            self.numbers += (x,)
+
+    def get(self):
+        self.i += 1
+        _, x, *self.numbers = self.numbers
+        self.numbers = (x, *self.numbers)
+        self.reserve()
+        return x
+
+    def get_with_whitelist(self, whitelist: int):
+        assert 0 < whitelist < (1 << 40)
+        while True:
+            x = self.get()
+            if whitelist & (1 << x):
+                return x
 
 
 users: List[User]
 users_by_client: Dict[str, User]
-planned_blocks: Dict[Tuple[datetime.date, Client], List[Block]] = {}
 
 
 def load_blockchain():
@@ -112,74 +122,106 @@ def load_blockchain():
     lesson_start_times = [datetime.time(*map(int, x.split(':'))) for x in blockchain['lesson-start-times']]
     logger.info(f"lesson_start_times: {lesson_start_times}")
 
-    classes_by_id = {x['id']: Class(x['id'], x['name'], process_transactions(x['transactions'], x['n-students'])) for x
-                     in blockchain['classes']}
-    logger.info(f"classes_by_id: {classes_by_id}")
-
-    def calculate_lessons(class_ids: List[Optional[ClassId]]):
+    def calculate_lessons(day_plan: Tuple[Optional[bool], ...]) -> Tuple[Lesson, ...]:
         i = 0
         lessons = []
-        while i < len(class_ids):
-            if class_ids[i] is None:
+        while i < len(day_plan):
+            if not day_plan[i]:
                 i += 1
                 continue
-            start = i
-            while i < len(class_ids) and class_ids[i] == class_ids[start]:
+            j = i
+            while i < len(day_plan) and day_plan[i]:
                 i += 1
-            lessons.append(Lesson(classes_by_id[class_ids[start]], lesson_start_times[start],
-                                  lesson_end(lesson_start_times[i - 1])))
-        return lessons
+            lessons.append(Lesson(lesson_start_times[j], lesson_end(lesson_start_times[i - 1])))
+        return tuple(lessons)
 
-    users = [User(x['id'], x['name'], x['client'], [calculate_lessons(y) for y in x['plan']]) for x in
-             blockchain['users']]
+    users = [User(x['client'], x['name'], process_transactions(x['transactions']),
+                  tuple(calculate_lessons(day_plan) for day_plan in tuple(x['plan']) + ((),) * (7 - len(x['plan']))))
+             for x in blockchain['users']]
     logger.info(f"users: {users}")
 
     users_by_client = {user.client: user for user in users}
 
 
-def plan_blocks(date: datetime.date):
-    if date.weekday() >= 5:
-        return
+load_blockchain()
 
+
+def load_planned():
+    logger.info("Load planned.yml")
+    planned = yaml.load((pathlib.Path(__file__).parent / 'planned.yml').read_text())
     for user in users:
-        blocks = []
-        for lesson in user.plan[date.weekday()]:
-            blocks.append(Block(generate_numbers(lesson.teached_class.weights), lesson))
-        planned_blocks[date, user.client] = blocks
+        user.i = planned[user.client]['i']
+        user.numbers = tuple(x - 1 for x in planned[user.client]['numbers'])
+        user.reserve()
 
 
-def find_block(moment: datetime.datetime, client: str) -> Optional[Block]:
-    key = None
-    for (m, c) in planned_blocks.keys():
-        if m == moment.date():
-            key = (m, c)
-    if key is None:
-        return None
-    for block in planned_blocks[key]:
-        if block.lesson.start_time <= moment.time() <= block.lesson.end_time:
-            return block
-    return None
-    # if (moment.date(), client) not in planned_blocks.keys():
-    #     return None
-    # for block in planned_blocks[moment.date(), client]:
-    #     if block.lesson.start_time <= moment.time() <= block.lesson.end_time:
-    #         return block
-    # return None
+def save_planned():
+    logger.info("Save planned.yml")
+    data = {user.client: {'numbers': [x + 1 for x in user.numbers], 'i': user.i} for user in users}
+    (pathlib.Path(__file__).parent / 'planned.yml').write_text(yaml.dump(data))
+
+
+try:
+    load_planned()
+except FileNotFoundError:
+    for user_ in users:
+        user_.reserve()
+    save_planned()
+
+
+def answer(moment: datetime.datetime, client: str, whitelist: int):
+    if client not in users_by_client.keys():
+        return 'invalid-client'
+    user = users_by_client[client]
+    if not user.is_active(moment):
+        return 'client-not-active'
+    x = user.get_with_whitelist(whitelist)
+    save_planned()
+    return f"{x} {compress_numbers(user.weights)}"
+
+
+@app.route('/get')
+def app_answer():
+    try:
+        auth = request.args.get('auth', '<wrong authentication>', str)
+        whitelist = request.args.get('whitelist', (1 << 40) - 1, int)
+
+        logger.info(f"Request: auth: {auth!r}, whitelist: {whitelist}")
+
+        s = 0
+        for key in sorted(request.headers.keys()):
+            if key not in ('X-Real-Ip', 'User-Agent', 'Accept'):
+                continue
+            for c in key + request.headers[key]:
+                s = (s * 127 + ord(c)) % (10 ** 32 + 49)
+        logger.info(f"The client proper hash is {s}")
+
+        if auth != "12345":
+            return 'invalid-authentication'
+
+        response = make_response(answer(datetime.datetime.now(best_timezone), 'xyzzy', whitelist))
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
+    except:
+        traceback.print_exc()
+        return "error", 403
 
 
 template = string.Template((pathlib.Path(__file__).parent / 'template.html').read_text(encoding='utf-8'))
 
 
 @app.route('/')
-def list_plans():
+def list_planned():
     items = []
 
-    for (date, client), blocks in planned_blocks.items():
-        user = users_by_client[client]
-        for block in blocks:
-            items.append(f'{html.escape(user.name)} <br> {date} {str(block.lesson.start_time)[:5]}-{str(block.lesson.end_time)[:5]}<ol>')
-            items.extend(f'<li>{i + 1}</li>' for i in block.numbers)
-            items.append(f'</ol>')
+    for user in users:
+        items.extend([
+            f'{user.name}',
+            '; '.join(calendar.day_abbr[i] + ' ' + ', '.join(map(str, user.plan[i])) for i in range(7) if user.plan[i]),
+            '<ol>' + '<li></li>' * (user.i % 10),
+            ''.join(f'<li>{i + 1}</li>' for i in user.numbers[:len(user.numbers) - user.i % 10]),
+            '</ol>'
+        ])
 
     items.append(f'time: {datetime.datetime.now(best_timezone)}')
 
@@ -188,35 +230,4 @@ def list_plans():
 
 @app.route('/help')
 def list_blockchain():
-    return (pathlib.Path(__file__).parent / 'blockchain.yml').read_text()
-
-
-def generate_response(moment: datetime.datetime, client: str):
-    block = find_block(moment, client)
-    if block is None:
-        return None
-
-    return compress_numbers(block.lesson.teached_class.weights) + ' ' + compress_numbers(block.numbers)
-
-
-@app.route('/get')
-def get():
-    auth = request.args.get('auth', '<wrong password>', str)
-    client = request.args.get('client', '<undeclared>', str)
-
-    if auth != "12345":  # TODO: Better password.
-        return
-
-    response = make_response(str(generate_response(datetime.datetime.now(best_timezone), client)))
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    return response
-
-
-load_blockchain()
-plan_blocks(datetime.date(2019, 3, 4))
-plan_blocks(datetime.date(2019, 3, 5))
-plan_blocks(datetime.date(2019, 3, 6))
-plan_blocks(datetime.date(2019, 3, 7))
-plan_blocks(datetime.date(2019, 3, 8))
-
-logger.info(planned_blocks)
+    return '<pre>' + html.escape((pathlib.Path(__file__).parent / 'blockchain.yml').read_text()) + '</pre>'

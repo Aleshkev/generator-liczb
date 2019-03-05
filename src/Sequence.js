@@ -9,14 +9,17 @@ class Sequence {
     this.weighted = range(40);
     this.backupWeighted = this.weighted.slice();
     this.next = [];
+    this.reserve();
 
     this.lastRegular = [];
 
     this.k = 0;
     this.lastWithoutRepetition = [];
 
-    // Fetch numbers from the server.
-    download(this);
+    // Fetch first number from the server.
+    let whitelist = [];
+    for (let i = 0; i < 40; ++i) whitelist[i] = i < 29;
+    download(this, whitelist);
   }
 
   setWeights(weights) {
@@ -27,7 +30,6 @@ class Sequence {
         this.weighted.push(i);
       }
     }
-    console.log(this.weighted);
   }
 
   setNext(numbers) {
@@ -59,7 +61,12 @@ class Sequence {
 
     for (;;) {
       const x = this._get();
-      if (whitelist[x]) return x;
+      if (whitelist[x]) {
+        // Fetch next number.
+        download(this, whitelist);
+
+        return x;
+      }
     }
   }
 

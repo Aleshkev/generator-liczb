@@ -78,7 +78,6 @@ class App extends Component {
           hours,
           minutes
         ) - now;
-      console.log(delta);
       if (delta > 0) {
         setTimeout(() => {
           window.location.reload();
