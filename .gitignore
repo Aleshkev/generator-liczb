@@ -1,8 +1,10 @@
 # temporary
 # haven't made custom one yet
 favicon.ico
-# don't want it to commit constantly
-package-lock.json
+
+# should never be commited
+planned.yml
+test.html
 
 # dependencies
 /node_modules
