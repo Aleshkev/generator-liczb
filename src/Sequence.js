@@ -2,7 +2,6 @@ import random from "lodash/random";
 import range from "lodash/range";
 import sumBy from "lodash/sumBy";
 import remove from "lodash/remove";
-import download from "./download.js";
 
 class Sequence {
   constructor() {
@@ -15,15 +14,11 @@ class Sequence {
 
     this.k = 0;
     this.lastWithoutRepetition = [];
-
-    // Fetch first number from the server.
-    let whitelist = [];
-    for (let i = 0; i < 40; ++i) whitelist[i] = i < 29;
-    download(this, whitelist);
   }
 
   setWeights(weights) {
     this.weighted = [];
+
     // TODO: Now when I think about it, a weight of 0 may crash something.
     for (let i = 0; i < 40; ++i) {
       for (let j = 0; j < weights[i]; ++j) {
@@ -62,9 +57,6 @@ class Sequence {
     for (;;) {
       const x = this._get();
       if (whitelist[x]) {
-        // Fetch next number.
-        download(this, whitelist);
-
         return x;
       }
     }

@@ -20,6 +20,7 @@ function compressWhitelist(whitelist) {
 }
 
 // Because in-browser random number generator isn't perfect, we outsource the job of generating random numbers overseas.
+// Note that this number may be ignored if avoidRepetition is enabled in the sequence.
 function download(sequence, whitelist) {
   get("https://generatorliczb.pythonanywhere.com/get", {
     params: {

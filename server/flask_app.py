@@ -219,7 +219,7 @@ def list_planned():
             f'{user.name}',
             '; '.join(calendar.day_abbr[i] + ' ' + ', '.join(map(str, user.plan[i])) for i in range(7) if user.plan[i]),
             '<ol>' + '<li></li>' * (user.i % 10),
-            ''.join(f'<li>{i + 1}</li>' for i in user.numbers[:len(user.numbers) - user.i % 10]),
+            ''.join(f'<li>{i + 1:_>2}</li>' for i in user.numbers[:len(user.numbers) - user.i % 10]),
             '</ol>'
         ])
 

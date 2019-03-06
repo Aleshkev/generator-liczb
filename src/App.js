@@ -14,6 +14,7 @@ import sumBy from "lodash/sumBy";
 import React, { Component } from "react";
 import BigNumberDisplay from "./BigNumberDisplay.js";
 import sequence from "./Sequence.js";
+import download from "./download.js";
 
 const styles = theme => ({
   main: {
@@ -52,6 +53,9 @@ class App extends Component {
 
     let whitelist = [];
     for (let i = 0; i < 40; ++i) whitelist[i] = i < 29;
+
+    // Get first number.
+    download(sequence, whitelist);
 
     this.state = {
       whitelist: whitelist,
@@ -102,6 +106,12 @@ class App extends Component {
     const x = this.state.avoidRepetition
       ? sequence.getWithoutRepetition(this.state.whitelist)
       : sequence.getRegular(this.state.whitelist);
+    
+    // Fetch next number.
+    let whitelist = this.state.whitelist.slice();
+    whitelist[x] = false;
+    download(sequence, whitelist);
+
     this.setState({ chosenNumber: x });
   };
 
