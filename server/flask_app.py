@@ -95,17 +95,20 @@ class User:
                 x = random.choice(weighted)
             self.numbers += (x,)
 
-    def get(self):
+    def get(self, starting: bool = False):
+        if starting:
+            return self.numbers[0]
         self.i += 1
         _, x, *self.numbers = self.numbers
         self.numbers = (x, *self.numbers)
         self.reserve()
         return x
 
-    def get_with_whitelist(self, whitelist: int):
+    def get_with_whitelist(self, whitelist: int, starting: bool = False):
         assert 0 < whitelist < (1 << 40)
         while True:
-            x = self.get()
+            x = self.get(starting)
+            starting = False
             if whitelist & (1 << x):
                 return x
 
@@ -169,13 +172,13 @@ except FileNotFoundError:
     save_planned()
 
 
-def answer(moment: datetime.datetime, client: str, whitelist: int):
+def answer(moment: datetime.datetime, client: str, whitelist: int, starting: bool):
     if client not in users_by_client.keys():
         return 'invalid-client'
     user = users_by_client[client]
     if not user.is_active(moment):
         return 'client-not-active'
-    x = user.get_with_whitelist(whitelist)
+    x = user.get_with_whitelist(whitelist, starting)
     save_planned()
     return f"{x} {compress_numbers(user.weights)}"
 
