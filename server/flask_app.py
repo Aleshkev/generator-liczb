@@ -21,8 +21,8 @@ app = Flask(__name__)
 
 logger = logging.getLogger()
 logging.basicConfig(level=logging.DEBUG)
-fh = logging.FileHandler('log.log')
-fh.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s:\n\t%(message)s'))
+fh = logging.FileHandler(pathlib.Path(__file__).parent / 'log.log')
+fh.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s:\t\t%(message)s'))
 logger.addHandler(fh)
 
 best_timezone = pytz.timezone('Europe/Warsaw')
@@ -34,8 +34,10 @@ def suspect(f):
         a = ', '.join(map(repr, args))
         k = (', ' if args and kwargs else '') + ', '.join(f'{k}={v!r}' for k, v in kwargs.items())
         r = f(*args, **kwargs)
+        print(f"{f.__name__}({a}{k}) -> {r!r}")
         logger.debug(f"{f.__name__}({a}{k}) -> {r!r}")
         return r
+
     return wrapper
 
 
@@ -77,11 +79,19 @@ def generate_numbers(weights: List[int], n: int = 500) -> List[int]:
     return list(random.choice(weighted) for _ in range(n))
 
 
+ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzm0123456789+/"
+
+
 @suspect
-def compress_numbers(numbers: Iterable[int],
-                     alphabet: str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzm0123456789+/"):
-    assert all(0 <= x < len(alphabet) for x in numbers)
-    return ''.join(alphabet[i] for i in numbers)
+def compress_numbers(numbers: Iterable[int]) -> str:
+    assert all(0 <= x < len(ALPHABET) for x in numbers)
+    return ''.join(ALPHABET[i] for i in numbers)
+
+
+@suspect
+def decompress_numbers(numbers: str) -> List[int]:
+    assert all(c in ALPHABET for c in numbers)
+    return [ALPHABET.index(c) for c in numbers]
 
 
 class Lesson(NamedTuple):
@@ -127,12 +137,11 @@ class User:
         return x
 
     @suspect
-    def get_with_whitelist(self, whitelist: int, starting: bool = False):
-        assert 0 < whitelist < (1 << 40)
+    def get_with_whitelist(self, whitelist: Tuple[bool, ...], starting: bool = False):
         while True:
             x = self.get(starting)
             starting = False
-            if whitelist & (1 << x):
+            if whitelist[x]:
                 return x
 
 
@@ -186,7 +195,6 @@ def load_planned():
 
 @suspect
 def save_planned():
-    logger.info("Save planned.yml")
     data = {}
     for user in users:
         data[user.client] = {'numbers': [x + 1 for x in user.numbers], 'i': user.i}
@@ -202,10 +210,12 @@ except FileNotFoundError:
         user_.reserve()
     save_planned()
 
+save_planned()
+load_planned()
+
 
 @suspect
-def answer(moment: datetime.datetime, client: str, whitelist: int, starting: bool = False):
-    logging.info(f"answer({moment}, {client!r}, {whitelist}, {starting})")
+def answer(moment: datetime.datetime, client: str, whitelist: Tuple[bool, ...], starting: bool = False):
     if client not in users_by_client.keys():
         return 'invalid-client'
     user = users_by_client[client]
@@ -220,8 +230,10 @@ def answer(moment: datetime.datetime, client: str, whitelist: int, starting: boo
 @app.route('/get')
 def app_answer():
     try:
-        auth = request.args.get('auth', '<wrong authentication>', str)
-        whitelist = request.args.get('whitelist', (1 << 40) - 1, int)
+        auth = request.args.get('auth', '<wrong authentication>')
+        whitelist = tuple(decompress_numbers(request.args.get('whitelist', 'B' * 40)))
+        assert all(x == 0 or x == 1 for x in whitelist)
+        whitelist = tuple(map(bool, whitelist))
 
         client_hash = 0
         for key in sorted(request.headers.keys()):
@@ -269,3 +281,8 @@ def list_planned():
 @app.route('/help')
 def list_blockchain():
     return '<pre>' + html.escape((pathlib.Path(__file__).parent / 'blockchain.yml').read_text()) + '</pre>'
+
+
+@app.route('/log')
+def list_log():
+    return '<pre>' + html.escape((pathlib.Path(__file__).parent / 'log.log').read_text()) + '</pre>'
