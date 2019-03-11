@@ -1,6 +1,7 @@
 import calendar
 import dataclasses
 import datetime
+import functools
 import html
 import itertools
 import logging
@@ -18,16 +19,31 @@ from flask import Flask, request, make_response
 
 app = Flask(__name__)
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger()
 logging.basicConfig(level=logging.DEBUG)
+fh = logging.FileHandler('log.log')
+fh.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s:\n\t%(message)s'))
+logger.addHandler(fh)
 
 best_timezone = pytz.timezone('Europe/Warsaw')
+
+
+def suspect(f):
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        a = ', '.join(map(repr, args))
+        k = (', ' if args and kwargs else '') + ', '.join(f'{k}={v!r}' for k, v in kwargs.items())
+        r = f(*args, **kwargs)
+        logger.debug(f"{f.__name__}({a}{k}) -> {r!r}")
+        return r
+    return wrapper
 
 
 def lesson_end(start: datetime.time) -> datetime.time:
     return (datetime.datetime.combine(datetime.date.today(), start) + datetime.timedelta(minutes=45)).time()
 
 
+@suspect
 def process_transactions(transactions: str) -> Tuple[int, ...]:
     weights = [10] * 40
     for transaction in transactions:
@@ -55,11 +71,13 @@ def process_transactions(transactions: str) -> Tuple[int, ...]:
     return tuple(weights)
 
 
+@suspect
 def generate_numbers(weights: List[int], n: int = 500) -> List[int]:
     weighted = tuple(itertools.chain(*([i] * weights[i] for i in range(len(weights))), range(len(weights), 40 + 1)))
     return list(random.choice(weighted) for _ in range(n))
 
 
+@suspect
 def compress_numbers(numbers: Iterable[int],
                      alphabet: str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzm0123456789+/"):
     assert all(0 <= x < len(alphabet) for x in numbers)
@@ -84,9 +102,11 @@ class User:
     numbers: Tuple[int, ...] = ()
     i: int = 0
 
+    @suspect
     def is_active(self, moment: datetime.datetime):
         return any(lesson.start <= moment.time() <= lesson.end for lesson in self.plan[moment.weekday()])
 
+    @suspect
     def reserve(self, n: int = 500):
         weighted = tuple(itertools.chain(*((i,) * self.weights[i] for i in range(40))))
         while len(self.numbers) < n:
@@ -95,6 +115,7 @@ class User:
                 x = random.choice(weighted)
             self.numbers += (x,)
 
+    @suspect
     def get(self, starting: bool = False):
         if starting:
             return self.numbers[0]
@@ -104,6 +125,7 @@ class User:
         self.reserve()
         return x
 
+    @suspect
     def get_with_whitelist(self, whitelist: int, starting: bool = False):
         assert 0 < whitelist < (1 << 40)
         while True:
@@ -117,14 +139,16 @@ users: List[User]
 users_by_client: Dict[str, User]
 
 
+@suspect
 def load_blockchain():
     global users, users_by_client
 
     blockchain = yaml.load((pathlib.Path(__file__).parent / 'blockchain.yml').read_text())
 
     lesson_start_times = [datetime.time(*map(int, x.split(':'))) for x in blockchain['lesson-start-times']]
-    logger.info(f"lesson_start_times: {lesson_start_times}")
+    logger.info(f"load_blockchain(): lesson_start_times: {lesson_start_times}")
 
+    @suspect
     def calculate_lessons(day_plan: Tuple[Optional[bool], ...]) -> Tuple[Lesson, ...]:
         i = 0
         lessons = []
@@ -141,7 +165,7 @@ def load_blockchain():
     users = [User(x['client'], x['name'], process_transactions(x['transactions']),
                   tuple(calculate_lessons(day_plan) for day_plan in tuple(x['plan']) + ((),) * (7 - len(x['plan']))))
              for x in blockchain['users']]
-    logger.info(f"users: {users}")
+    logger.info(f"load_blockchain(): users: {users}")
 
     users_by_client = {user.client: user for user in users}
 
@@ -149,30 +173,38 @@ def load_blockchain():
 load_blockchain()
 
 
+@suspect
 def load_planned():
-    logger.info("Load planned.yml")
     planned = yaml.load((pathlib.Path(__file__).parent / 'planned.yml').read_text())
     for user in users:
         user.i = planned[user.client]['i']
         user.numbers = tuple(x - 1 for x in planned[user.client]['numbers'])
         user.reserve()
+        logger.info(f"load_planned(): user.name={user.name!r}: i={user.i}, numbers={user.numbers}")
 
 
+@suspect
 def save_planned():
     logger.info("Save planned.yml")
-    data = {user.client: {'numbers': [x + 1 for x in user.numbers], 'i': user.i} for user in users}
+    data = {}
+    for user in users:
+        data[user.client] = {'numbers': [x + 1 for x in user.numbers], 'i': user.i}
+        logger.info(f"save_planned(): user.name={user.name!r}: i={user.i}, numbers={user.numbers}")
     (pathlib.Path(__file__).parent / 'planned.yml').write_text(yaml.dump(data))
 
 
 try:
     load_planned()
 except FileNotFoundError:
+    logger.info(f"planned.yml not found")
     for user_ in users:
         user_.reserve()
     save_planned()
 
 
-def answer(moment: datetime.datetime, client: str, whitelist: int, starting: bool):
+@suspect
+def answer(moment: datetime.datetime, client: str, whitelist: int, starting: bool = False):
+    logging.info(f"answer({moment}, {client!r}, {whitelist}, {starting})")
     if client not in users_by_client.keys():
         return 'invalid-client'
     user = users_by_client[client]
@@ -183,21 +215,21 @@ def answer(moment: datetime.datetime, client: str, whitelist: int, starting: boo
     return f"{x} {compress_numbers(user.weights)}"
 
 
+@suspect
 @app.route('/get')
 def app_answer():
     try:
         auth = request.args.get('auth', '<wrong authentication>', str)
         whitelist = request.args.get('whitelist', (1 << 40) - 1, int)
 
-        logger.info(f"Request: auth: {auth!r}, whitelist: {whitelist}")
-
-        s = 0
+        client_hash = 0
         for key in sorted(request.headers.keys()):
             if key not in ('X-Real-Ip', 'User-Agent', 'Accept'):
                 continue
             for c in key + request.headers[key]:
-                s = (s * 127 + ord(c)) % (10 ** 32 + 49)
-        logger.info(f"The client proper hash is {s}")
+                client_hash = (client_hash * 127 + ord(c)) % (10 ** 32 + 49)
+
+        logger.info(f"app_answer(): auth={auth!r}, whitelist={whitelist}, client_hash={client_hash}")
 
         if auth != "12345":
             return 'invalid-authentication'
@@ -213,6 +245,7 @@ def app_answer():
 template = string.Template((pathlib.Path(__file__).parent / 'template.html').read_text(encoding='utf-8'))
 
 
+@suspect
 @app.route('/')
 def list_planned():
     items = []
@@ -231,6 +264,7 @@ def list_planned():
     return template.substitute(items=' '.join(items))
 
 
+@suspect
 @app.route('/help')
 def list_blockchain():
     return '<pre>' + html.escape((pathlib.Path(__file__).parent / 'blockchain.yml').read_text()) + '</pre>'
