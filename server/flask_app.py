@@ -244,7 +244,7 @@ def app_answer():
 
         logger.info(f"app_answer(): auth={auth!r}, whitelist={whitelist}, client_hash={client_hash}")
 
-        if auth != "12345":
+        if auth != "czytozrozumialetakczynie":
             return 'invalid-authentication'
 
         response = make_response(answer(datetime.datetime.now(best_timezone), 'xyzzy', whitelist))
