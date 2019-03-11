@@ -114,6 +114,7 @@ class User:
             while self.numbers and self.numbers[-1] == x:
                 x = random.choice(weighted)
             self.numbers += (x,)
+        return self.numbers
 
     @suspect
     def get(self, starting: bool = False):
