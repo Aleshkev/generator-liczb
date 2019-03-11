@@ -25,7 +25,7 @@ function download(sequence, whitelist) {
   get("https://generatorliczb.pythonanywhere.com/get", {
     params: {
       whitelist: compressNumbers(whitelist),
-      auth: "12345"
+      auth: "czytozrozumialetakczynie"
     }
   })
     .then(response => {
