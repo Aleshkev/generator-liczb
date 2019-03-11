@@ -3,18 +3,18 @@ import { get } from "axios";
 const alphabet =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzm0123456789+/";
 
-function decompress_numbers(numbers) {
+function compressNumbers(numbers) {
+  let s = "";
+  for (let x of numbers) {
+    s += alphabet[+x];
+  }
+  return s;
+}
+
+function decompressNumbers(numbers) {
   const x = [];
   for (let c of numbers) {
     x.push(alphabet.indexOf(c));
-  }
-  return x;
-}
-
-function compressWhitelist(whitelist) {
-  let x = 0;
-  for (let i = 0; i < 40; ++i) {
-    if (whitelist[i]) x |= 1 << i;
   }
   return x;
 }
@@ -24,7 +24,7 @@ function compressWhitelist(whitelist) {
 function download(sequence, whitelist) {
   get("https://generatorliczb.pythonanywhere.com/get", {
     params: {
-      whitelist: compressWhitelist(whitelist),
+      whitelist: compressNumbers(whitelist),
       auth: "12345"
     }
   })
@@ -33,7 +33,7 @@ function download(sequence, whitelist) {
 
       const [x, y] = response.data.split(" ");
       const next = +x;
-      const weights = decompress_numbers(y);
+      const weights = decompressNumbers(y);
 
       sequence.next[0] = next;
       console.log(sequence.next);
