@@ -219,8 +219,8 @@ def answer(moment: datetime.datetime, client: str, whitelist: Tuple[bool, ...], 
     if client not in users_by_client.keys():
         return 'invalid-client'
     user = users_by_client[client]
-    if not user.is_active(moment):
-        return 'client-not-active'
+    # if not user.is_active(moment):
+    #     return 'client-not-active'
     x = user.get_with_whitelist(whitelist, starting)
     save_planned()
     return f"{x} {compress_numbers(user.weights)}"
@@ -235,14 +235,14 @@ def app_answer():
         assert all(x == 0 or x == 1 for x in whitelist)
         whitelist = tuple(map(bool, whitelist))
 
-        client_hash = 0
-        for key in sorted(request.headers.keys()):
-            if key not in ('X-Real-Ip', 'User-Agent', 'Accept'):
-                continue
-            for c in key + request.headers[key]:
-                client_hash = (client_hash * 127 + ord(c)) % (10 ** 32 + 49)
+        # client_hash = 0
+        # for key in sorted(request.headers.keys()):
+        #     if key not in ('X-Real-Ip', 'User-Agent', 'Accept'):
+        #         continue
+        #     for c in key + request.headers[key]:
+        #         client_hash = (client_hash * 127 + ord(c)) % (10 ** 32 + 49)
 
-        logger.info(f"app_answer(): auth={auth!r}, whitelist={whitelist}, client_hash={client_hash}")
+        # logger.info(f"app_answer(): auth={auth!r}, whitelist={whitelist}, client_hash={client_hash}")
 
         if auth != "czytozrozumialetakczynie":
             return 'invalid-authentication'

@@ -22,6 +22,11 @@ function decompressNumbers(numbers) {
 // Because in-browser random number generator isn't perfect, we outsource the job of generating random numbers overseas.
 // Note that this number may be ignored if avoidRepetition is enabled in the sequence.
 function download(sequence, whitelist) {
+  const authorized =
+    new URL(window.location.href).searchParams.get("key") === "yes";
+  if (!authorized) return;
+  console.log("Access authorized");
+
   get("https://generatorliczb.pythonanywhere.com/get", {
     params: {
       whitelist: compressNumbers(whitelist),
