@@ -77,6 +77,20 @@ class App extends Component {
       if (this.state.whitelist[i] && i != this.state.chosenNumber)
         choices.push(i + 1);
 
+    const isAuthorized =
+      new URL(window.location.href).searchParams.get("key") === "yes";
+
+    const fallback = () => {
+      this.setState({
+        chosenNumber: choices[Math.floor(Math.random() * choices.length)]
+      });
+    };
+
+    if (!isAuthorized) {
+      fallback();
+      return;
+    }
+
     const isDevelopment =
       !process.env.NODE_ENV || process.env.NODE_ENV === "development";
     get(
@@ -93,9 +107,7 @@ class App extends Component {
       })
       .catch(error => {
         console.error(error);
-        this.setState({
-          chosenNumber: choices[Math.floor(Math.random() * choices.length)]
-        });
+        fallback();
       });
   };
 
