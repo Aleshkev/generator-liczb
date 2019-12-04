@@ -13,8 +13,7 @@ import range from "lodash/range";
 import sumBy from "lodash/sumBy";
 import React, { Component } from "react";
 import BigNumberDisplay from "./BigNumberDisplay.js";
-import sequence from "./Sequence.js";
-import download from "./download.js";
+import { get } from "axios";
 
 const styles = theme => ({
   main: {
@@ -54,40 +53,10 @@ class App extends Component {
     let whitelist = [];
     for (let i = 0; i < 40; ++i) whitelist[i] = i < 29;
 
-    // Get first number.
-    download(sequence, whitelist);
-
     this.state = {
       whitelist: whitelist,
-      avoidRepetition: false,
       chosenNumber: null
     };
-
-    for (let [hours, minutes] of [
-      [8, 15],
-      [9, 10],
-      [10, 10],
-      [11, 5],
-      [12, 0],
-      [13, 5],
-      [14, 10],
-      [15, 5]
-    ]) {
-      let now = new Date();
-      let delta =
-        new Date(
-          now.getFullYear(),
-          now.getMonth(),
-          now.getDate(),
-          hours,
-          minutes
-        ) - now;
-      if (delta > 0) {
-        setTimeout(() => {
-          window.location.reload();
-        }, delta);
-      }
-    }
   }
 
   onWhitelistChange = (i, shift) => {
@@ -103,16 +72,31 @@ class App extends Component {
   };
 
   newNumber = () => {
-    const x = this.state.avoidRepetition
-      ? sequence.getWithoutRepetition(this.state.whitelist)
-      : sequence.getRegular(this.state.whitelist);
-    
-    // Fetch next number.
-    let whitelist = this.state.whitelist.slice();
-    whitelist[x] = false;
-    download(sequence, whitelist);
+    let choices = [];
+    for (let i = 0; i < 40; ++i)
+      if (this.state.whitelist[i] && i != this.state.chosenNumber)
+        choices.push(i + 1);
 
-    this.setState({ chosenNumber: x });
+    const isDevelopment =
+      !process.env.NODE_ENV || process.env.NODE_ENV === "development";
+    get(
+      isDevelopment
+        ? "http://localhost:5000/get"
+        : "https://generatorliczb.pythonanywhere.com/get",
+      {
+        params: { whitelist: choices.join() }
+      }
+    )
+      .then(response => {
+        console.log(response);
+        this.setState({ chosenNumber: +response.data - 1 });
+      })
+      .catch(error => {
+        console.error(error);
+        this.setState({
+          chosenNumber: choices[Math.floor(Math.random() * choices.length)]
+        });
+      });
   };
 
   render() {
@@ -164,7 +148,7 @@ class App extends Component {
                 Ustawienia
               </ExpansionPanelSummary>
               <ExpansionPanelDetails>
-                <FormControlLabel
+                {/* <FormControlLabel
                   control={
                     <Switch
                       checked={this.state.avoidRepetition}
@@ -176,7 +160,7 @@ class App extends Component {
                     />
                   }
                   label="Unikaj powtórzeń"
-                />
+                /> */}
               </ExpansionPanelDetails>
             </ExpansionPanel>
 

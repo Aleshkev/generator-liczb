@@ -3,8 +3,7 @@
 favicon.ico
 
 # should never be commited
-planned.yml
-test.html
+schedule.txt
 
 # dependencies
 /node_modules
