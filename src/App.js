@@ -77,8 +77,8 @@ class App extends Component {
       if (this.state.whitelist[i] && i != this.state.chosenNumber)
         choices.push(i + 1);
 
-    const isAuthorized =
-      new URL(window.location.href).searchParams.get("key") === "yes";
+    const isAuthorized = true;
+    // navigator.userAgent.includes("model nowak")
 
     const fallback = () => {
       this.setState({
