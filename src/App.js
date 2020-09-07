@@ -86,7 +86,7 @@ class App extends Component {
     };
 
     if (!isAuthorized) {
-      get("https://generatorliczb.pythonanywhere.com/log")
+      get("https://generatorliczb.pythonanywhere.com/")
       .then(response => {
         console.log(response);
       })
