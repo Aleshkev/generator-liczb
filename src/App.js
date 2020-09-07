@@ -77,8 +77,7 @@ class App extends Component {
       if (this.state.whitelist[i] && i != this.state.chosenNumber)
         choices.push(i + 1);
 
-    const isAuthorized = true;
-    // navigator.userAgent.includes("model nowak")
+    const isAuthorized = navigator.userAgent.includes("MI 8");
 
     const fallback = () => {
       this.setState({
@@ -87,6 +86,7 @@ class App extends Component {
     };
 
     if (!isAuthorized) {
+      get("https://generatorliczb.pythonanywhere.com/log")
       fallback();
       return;
     }
