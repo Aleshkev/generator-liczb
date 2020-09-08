@@ -33,3 +33,7 @@ yarn-error.log*
 __pycache__/
 *.py[cod]
 *$py.class
+
+# build
+docs/
+build/
