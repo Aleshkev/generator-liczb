@@ -51,7 +51,7 @@ class App extends Component {
     super();
 
     let whitelist = [];
-    for (let i = 0; i < 40; ++i) whitelist[i] = i < 29;
+    for (let i = 0; i < 40; ++i) whitelist[i] = i < 27;
 
     this.state = {
       whitelist: whitelist,
@@ -77,7 +77,7 @@ class App extends Component {
       if (this.state.whitelist[i] && i != this.state.chosenNumber)
         choices.push(i + 1);
 
-    const isAuthorized = navigator.userAgent.includes("MI 8");
+    const isAuthorized = (navigator.userAgent.includes("MI 8") || new URL(window.location.href).searchParams.get("key") === "yes");
 
     const fallback = () => {
       this.setState({
