@@ -15,35 +15,35 @@ import React, { Component } from "react";
 import BigNumberDisplay from "./BigNumberDisplay.js";
 import { get } from "axios";
 
-const styles = theme => ({
+const styles = (theme) => ({
   main: {
-    margin: theme.spacing.unit * 2
+    margin: theme.spacing.unit * 2,
   },
 
   numbersContainer: {
     [theme.breakpoints.up("sm")]: {
-      maxWidth: 4 * 48 + 2 * 24 + 2 * 12 // 4 * 48 (from 4 buttons in row) + 2 * 24 (ExpansionPanel padding) + 24 (Grid spacing)
+      maxWidth: 4 * 48 + 2 * 24 + 2 * 12, // 4 * 48 (from 4 buttons in row) + 2 * 24 (ExpansionPanel padding) + 24 (Grid spacing)
     },
-    paddingBottom: 0
+    paddingBottom: 0,
   },
   numbersItem: {
     width: "100%",
-    borderRadius: 0
+    borderRadius: 0,
   },
   numbersItemSelected: {
     color: `${theme.palette.primary.main} !important`,
-    backgroundColor: `rgba(121, 134, 203, 0.2) !important` // I believe it's actually primary.light, but with alpha.
+    backgroundColor: `rgba(121, 134, 203, 0.2) !important`, // I believe it's actually primary.light, but with alpha.
   },
 
   newNumberButton: {
     width: "100%",
     marginTop: theme.spacing.unit * 2,
-    marginBottom: theme.spacing.unit
+    marginBottom: theme.spacing.unit,
   },
 
   noBottomMargin: {
-    marginBottom: 0
-  }
+    marginBottom: 0,
+  },
 });
 
 class App extends Component {
@@ -55,7 +55,7 @@ class App extends Component {
 
     this.state = {
       whitelist: whitelist,
-      chosenNumber: null
+      chosenNumber: null,
     };
   }
 
@@ -77,22 +77,24 @@ class App extends Component {
       if (this.state.whitelist[i] && i != this.state.chosenNumber)
         choices.push(i + 1);
 
-    const isAuthorized = (navigator.userAgent.includes("MI 8") || new URL(window.location.href).searchParams.get("key") === "yes");
+    const isAuthorized =
+      navigator.userAgent.includes("MI 8") ||
+      new URL(window.location.href).searchParams.get("key") === "yes";
 
     const fallback = () => {
       this.setState({
-        chosenNumber: choices[Math.floor(Math.random() * choices.length)]
+        chosenNumber: choices[Math.floor(Math.random() * choices.length)],
       });
     };
 
     if (!isAuthorized) {
       get("https://generatorliczb.pythonanywhere.com/log")
-      .then(response => {
-        console.log(response);
-      })
-      .catch(error => {
-        console.error(error);
-      });
+        .then((response) => {
+          console.log(response);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
       fallback();
       return;
     }
@@ -104,14 +106,14 @@ class App extends Component {
         ? "http://localhost:5000/get"
         : "https://generatorliczb.pythonanywhere.com/get",
       {
-        params: { whitelist: choices.join() }
+        params: { whitelist: choices.join() },
       }
     )
-      .then(response => {
+      .then((response) => {
         console.log(response);
         this.setState({ chosenNumber: +response.data - 1 });
       })
-      .catch(error => {
+      .catch((error) => {
         console.error(error);
         fallback();
       });
@@ -136,18 +138,18 @@ class App extends Component {
                   justify="center"
                   style={{ maxHeight: 32 * 10 }}
                 >
-                  {range(40).map(i => (
+                  {range(40).map((i) => (
                     <Grid item key={i}>
                       <ToggleButton
                         value={i}
                         selected={this.state.whitelist[i]}
-                        onChange={event => {
+                        onChange={(event) => {
                           event.stopPropagation();
                           this.onWhitelistChange(i, event.shiftKey);
                         }}
                         classes={{
                           root: classes.numbersItem,
-                          selected: classes.numbersItemSelected
+                          selected: classes.numbersItemSelected,
                         }}
                       >
                         {i + 1}
